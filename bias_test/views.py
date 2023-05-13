@@ -1,10 +1,15 @@
 from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+import json
 
+@csrf_exempt
 def submit_choice(request):
-    print(request)
     if request.method == 'POST':
-        question_index = request.POST.get('question_index')
-        choice_index = request.POST.get('choice_index')
-        return JsonResponse({'status': 'success'})
+        data = parseJsonToDictionary(request.body)
+        return JsonResponse({'status': 'success', "data": data})
     else:
         return JsonResponse({'status': 'error'})
+
+
+def parseJsonToDictionary(body):
+    return json.loads(body.decode("utf-8"))
