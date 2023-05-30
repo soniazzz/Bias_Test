@@ -21,11 +21,11 @@ class User(models.Model):
     user_id = models.IntegerField()
     phone_number = models.CharField(max_length=20)
     team = models.CharField(max_length=20)
-    possibility_biases_1 = models.FloatField(null=True, blank=True)
-    possibility_biases_2 = models.FloatField(null=True, blank=True)
-    possibility_biases_3 = models.FloatField(null=True, blank=True)
-    possibility_biases_4 = models.FloatField(null=True, blank=True)
-    possibility_biases_5 = models.FloatField(null=True, blank=True)
+    possibility_biases_1 = models.FloatField(default=0, null=True, blank=True)
+    possibility_biases_2 = models.FloatField(default=0, null=True, blank=True)
+    possibility_biases_3 = models.FloatField(default=0, null=True, blank=True)
+    possibility_biases_4 = models.FloatField(default=0, null=True, blank=True)
+    possibility_biases_5 = models.FloatField(default=0, null=True, blank=True)
 
     def update_possibility_biases(self, result_dict):
         for bias_index, possibility in result_dict.items():

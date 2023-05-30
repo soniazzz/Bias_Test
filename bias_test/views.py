@@ -1,6 +1,7 @@
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from bias_test.models import BiasTestQuestion, User
+from django.core import serializers
 
 import json
 def calculate_result(result):
@@ -66,3 +67,21 @@ def get_questions(request):
             errormessgae="error_here:("
         # Return the questions as a JSON response
         return JsonResponse(questions_list, safe=False)
+
+
+def get_bias_results(request, user_id):
+    if request.method == 'GET':
+        print("hahah")
+        try:
+            user = User.objects.get(user_id=user_id)
+            data = {
+                "possibility_biases_1": user.possibility_biases_1,
+                "possibility_biases_2": user.possibility_biases_2,
+                "possibility_biases_3": user.possibility_biases_3,
+                "possibility_biases_4": user.possibility_biases_4,
+                "possibility_biases_5": user.possibility_biases_5,
+            }
+            print(data)
+            return JsonResponse(data, safe=False)
+        except User.DoesNotExist:
+            return JsonResponse({"error": "User not found"}, status=404)
