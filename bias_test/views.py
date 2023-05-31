@@ -1,7 +1,7 @@
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from bias_test.models import BiasTestQuestion, User
-from django.core import serializers
+from django.core.exceptions import ObjectDoesNotExist
 
 import json
 def calculate_result(result):
@@ -85,3 +85,49 @@ def get_bias_results(request, user_id):
             return JsonResponse(data, safe=False)
         except User.DoesNotExist:
             return JsonResponse({"error": "User not found"}, status=404)
+
+
+
+@csrf_exempt
+def signup(request):
+    if request.method == "POST":
+        data = json.loads(request.body)
+        print(data)
+        result={}
+        result["username"] = data.get("username")
+        result["password"] = data.get("password")
+        result["phone_number"] = data.get("phone_number")
+        result["team"] = data.get("team")
+
+        if User.objects.filter(user_name=result["username"]).exists():
+            print("Username already exists.")
+            return JsonResponse({"error": "Username already exists."})
+
+        # Create a new user instance and set the fields
+        user = User(user_name=result["username"], phone_number=result["phone_number"], team=result["team"],password=result["password"])
+        user.save()
+
+        return JsonResponse({"user_id": user.user_id})
+        print("signup" + user.user_id)
+
+    return JsonResponse({"error": "Invalid request method."})
+
+@csrf_exempt
+def login(request):
+    if request.method == "POST":
+        data = json.loads(request.body)
+        username = data.get("username")
+        password = data.get("password")
+
+        try:
+            user = User.objects.get(user_name=username)
+        except ObjectDoesNotExist:
+            return JsonResponse({"error": "User does not exist."})
+
+        if user.password == password:
+            print(user.user_id)
+            return JsonResponse({"user_id": user.user_id})
+        else:
+            return JsonResponse({"error": "Wrong password."})
+
+        return JsonResponse({"error": "Error in login."})
