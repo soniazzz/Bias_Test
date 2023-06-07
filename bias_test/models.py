@@ -1,6 +1,7 @@
 from django.db import models
 
 
+
 class BiasTestQuestion(models.Model):
     question_text = models.TextField()
     option_A = models.TextField()
@@ -12,6 +13,9 @@ class BiasTestQuestion(models.Model):
     option_D = models.TextField()
     point_for_optionD = models.IntegerField()
     test_for_bias_index = models.IntegerField()
+
+    def __str__(self):
+        return self.question_text
 
 
 

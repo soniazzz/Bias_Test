@@ -3,6 +3,7 @@ from django.views.decorators.csrf import csrf_exempt
 from bias_test.models import BiasTestQuestion, User
 from django.core.exceptions import ObjectDoesNotExist
 
+
 import json
 def calculate_result(result):
     for key in result:
@@ -74,12 +75,19 @@ def get_bias_results(request, user_id):
         print("hahah")
         try:
             user = User.objects.get(user_id=user_id)
+
+            p1 = str(int(user.possibility_biases_1 * 100)) + "%"
+            p2 = str(int(user.possibility_biases_2 * 100)) + "%"
+            p3 = str(int(user.possibility_biases_3 * 100)) + "%"
+            p4 = str(int(user.possibility_biases_4 * 100)) + "%"
+            p5 = str(int(user.possibility_biases_5 * 100)) + "%"
+
             data = {
-                "possibility_biases_1": user.possibility_biases_1,
-                "possibility_biases_2": user.possibility_biases_2,
-                "possibility_biases_3": user.possibility_biases_3,
-                "possibility_biases_4": user.possibility_biases_4,
-                "possibility_biases_5": user.possibility_biases_5,
+                "possibility_biases_1": p1,
+                "possibility_biases_2": p2,
+                "possibility_biases_3": p3,
+                "possibility_biases_4": p4,
+                "possibility_biases_5": p5,
             }
             print(data)
             return JsonResponse(data, safe=False)
@@ -131,3 +139,40 @@ def login(request):
             return JsonResponse({"error": "Wrong password."})
 
         return JsonResponse({"error": "Error in login."})
+
+
+def get_profile(request, user_id):
+    if request.method == 'GET':
+        print("profile")
+        try:
+            user = User.objects.get(user_id=user_id)
+
+            p1 = str(int(user.possibility_biases_1 * 100)) + "%"
+            p2 = str(int(user.possibility_biases_2 * 100)) + "%"
+            p3 = str(int(user.possibility_biases_3 * 100)) + "%"
+            p4 = str(int(user.possibility_biases_4 * 100)) + "%"
+            p5 = str(int(user.possibility_biases_5 * 100)) + "%"
+            name= user.user_name
+            phone=user.phone_number
+            team=user.team
+
+            data = {
+                "possibility_biases_1": p1,
+                "possibility_biases_2": p2,
+                "possibility_biases_3": p3,
+                "possibility_biases_4": p4,
+                "possibility_biases_5": p5,
+            }
+            print(data)
+            info= {
+                "name": name,
+                "phone": phone,
+                "team": team,
+            }
+            print(info)
+
+            package={"data":data,"info":info}
+            print(package)
+            return JsonResponse(package, safe=False)
+        except User.DoesNotExist:
+            return JsonResponse({"error": "User not found"}, status=404)
