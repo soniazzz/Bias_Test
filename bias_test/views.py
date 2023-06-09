@@ -146,7 +146,6 @@ def get_profile(request, user_id):
         print("profile")
         try:
             user = User.objects.get(user_id=user_id)
-
             p1 = str(int(user.possibility_biases_1 * 100)) + "%"
             p2 = str(int(user.possibility_biases_2 * 100)) + "%"
             p3 = str(int(user.possibility_biases_3 * 100)) + "%"
@@ -176,3 +175,30 @@ def get_profile(request, user_id):
             return JsonResponse(package, safe=False)
         except User.DoesNotExist:
             return JsonResponse({"error": "User not found"}, status=404)
+
+
+def editProfile(request, user_id):
+
+    if request.method == "POST":
+        user = User.objects.get(user_id=user_id)
+        data = json.loads(request.body)
+        print(data)
+        result={}
+        result["username"] = data.get("username")
+        result["phone_number"] = data.get("phone_number")
+        result["team"] = data.get("team")
+
+        if User.objects.filter(user_name=result["username"]).exists():
+            print("Username already exists.")
+            return JsonResponse({"error": "Username already exists."})
+
+        # Create a new user instance and set the fields
+        user.user_name=result["username"]
+        user.team=result["team"]
+        user.phone_number=result["phone_number"]
+        user.save()
+
+        return JsonResponse({"user_id": user.user_id})
+
+
+    return JsonResponse({"error": "Invalid request method."})

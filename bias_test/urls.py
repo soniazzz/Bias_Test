@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import submit_choice,get_questions, get_bias_results, signup, login, get_profile
+from .views import submit_choice,get_questions, get_bias_results, signup, login, get_profile,editProfile
 
 urlpatterns = [
     path('api/submit-choice/', submit_choice, name='submit_choice'),
@@ -8,4 +8,5 @@ urlpatterns = [
     path('api/get-profile/<int:user_id>/', get_profile, name='get_profile'),
     path('api/signup/', signup, name='signup'),
     path('api/login/', login, name='login'),
+    path('api/edit-profile/<int:user_id>/', editProfile, name='editProfile'),
 ]
