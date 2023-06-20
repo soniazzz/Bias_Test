@@ -6,24 +6,24 @@ from django.utils import timezone
 from datetime import datetime, timedelta
 import json
 
+
 def calculate_result(result):
     for key in result:
-        result[key] = result[key] *2/3
+        result[key] = result[key] /4/10
     return result
+
 
 @csrf_exempt
 def submit_choice(request):
     if request.method == 'POST':
-        #get user responses
+        # get user responses
         data = parseJsonToDictionary(request.body)
         print(data)
         responses = data.get('responses')
         user_id = data.get('user_id')
 
-        #convert responses
+        # convert responses
         result = calculate_result(responses)
-
-
 
         # Retrieve the user instance with the given user_id
         user = User.objects.get(user_id=user_id)
@@ -31,15 +31,12 @@ def submit_choice(request):
         # Update the possibility biases fields based on the result dictionary
         user.update_possibility_biases(result)
 
-        print("Responses:", result)
-        print("User_ID:", user_id)
+        ##print("Responses:", result)
+        ##print("User_ID:", user_id)
 
         return JsonResponse({'status': 'success', "data": data})
     else:
         return JsonResponse({'status': 'error'})
-
-
-
 
 
 def parseJsonToDictionary(body):
@@ -50,31 +47,38 @@ def parseJsonToDictionary(body):
 def get_questions(request):
     if request.method == 'GET':
         try:
-            # Retrieve 2 random questions from the database
-            questions = BiasTestQuestion.objects.order_by('?')[:5]
-            # Convert the questions to a list of dictionaries
             questions_list = []
-            for question in questions:
-                question_dict = {
-                    'question': question.question_text,
-                    'choices': [
-                        {'option': question.option_A, 'points': question.point_for_optionA},
-                        {'option': question.option_B, 'points': question.point_for_optionB},
-                        {'option': question.option_C, 'points': question.point_for_optionC},
-                        {'option': question.option_D, 'points': question.point_for_optionD},
-                    ],
-                    'index': question.test_for_bias_index
-                }
-                questions_list.append(question_dict)
+
+            # Retrieve 2 random questions for each bias type index
+            for bias_type_index in range(1, 6):
+                questions = BiasTestQuestion.objects.filter(test_for_bias_index=bias_type_index).order_by('?')[:2]
+
+                # Convert the questions to a list of dictionaries
+                for question in questions:
+                    question_dict = {
+                        'question': question.question_text,
+                        'choices': [
+                            {'option': question.option_A, 'points': question.point_for_optionA},
+                            {'option': question.option_B, 'points': question.point_for_optionB},
+                            {'option': question.option_C, 'points': question.point_for_optionC},
+                            {'option': question.option_D, 'points': question.point_for_optionD},
+                        ],
+                        'index': question.test_for_bias_index
+                    }
+                    questions_list.append(question_dict)
+
+            # Shuffle the questions to randomize the order
+            from random import shuffle
+            shuffle(questions_list)
         except:
-            errormessgae="error_here:("
+            errormessgae = "error_here:("
         # Return the questions as a JSON response
         return JsonResponse(questions_list, safe=False)
 
 
 def get_bias_results(request, user_id):
     if request.method == 'GET':
-        print("hahah")
+        ##print("hahah")
         try:
             user = User.objects.get(user_id=user_id)
 
@@ -91,36 +95,37 @@ def get_bias_results(request, user_id):
                 "Possibility of Height Bias": p4,
                 "Possibility of Affinity Bias": p5,
             }
-            print(data)
+            ##print(data)
             return JsonResponse(data, safe=False)
         except User.DoesNotExist:
             return JsonResponse({"error": "User not found"}, status=404)
-
 
 
 @csrf_exempt
 def signup(request):
     if request.method == "POST":
         data = json.loads(request.body)
-        print(data)
-        result={}
+        ##print(data)
+        result = {}
         result["username"] = data.get("username")
         result["password"] = data.get("password")
         result["phone_number"] = data.get("phone_number")
         result["team"] = data.get("team")
 
         if User.objects.filter(user_name=result["username"]).exists():
-            print("Username already exists.")
+            ##print("Username already exists.")
             return JsonResponse({"error": "Username already exists."})
 
         # Create a new user instance and set the fields
-        user = User(user_name=result["username"], phone_number=result["phone_number"], team=result["team"],password=result["password"])
+        user = User(user_name=result["username"], phone_number=result["phone_number"], team=result["team"],
+                    password=result["password"])
         user.save()
 
         return JsonResponse({"user_id": user.user_id})
-        print("signup" + user.user_id)
+        ##print("signup" + user.user_id)
 
     return JsonResponse({"error": "Invalid request method."})
+
 
 @csrf_exempt
 def login(request):
@@ -128,6 +133,7 @@ def login(request):
         data = json.loads(request.body)
         username = data.get("username")
         password = data.get("password")
+        ##print(username,password)
 
         try:
             user = User.objects.get(user_name=username)
@@ -149,8 +155,8 @@ def get_profile(request, user_id):
         return HttpResponseForbidden()
 
     if request.method == 'GET':
-        print(request.session.get("user_id"))
-        print("profile")
+        ##print(request.session.get("user_id"))
+        ##print("profile")
         try:
             user = User.objects.get(user_id=user_id)
             p1 = str(int(user.possibility_biases_1 * 100)) + "%"
@@ -158,10 +164,10 @@ def get_profile(request, user_id):
             p3 = str(int(user.possibility_biases_3 * 100)) + "%"
             p4 = str(int(user.possibility_biases_4 * 100)) + "%"
             p5 = str(int(user.possibility_biases_5 * 100)) + "%"
-            name= user.user_name
-            phone=user.phone_number
-            team=user.team
-            avatar=user.avatar
+            name = user.user_name
+            phone = user.phone_number
+            team = user.team
+            avatar = user.avatar
 
             # Retrieve 5 random articles from the database
             articles = Article.objects.order_by('?')[:5]
@@ -177,8 +183,6 @@ def get_profile(request, user_id):
                 }
                 articles_list.append(article_dict)
 
-
-
             data = {
                 "Possibility of Gender Bias": p1,
                 "Possibility of Racial Bias": p2,
@@ -187,15 +191,14 @@ def get_profile(request, user_id):
                 "Possibility of Affinity Bias": p5,
             }
 
-            info= {
+            info = {
                 "name": name,
                 "phone": phone,
                 "team": team,
                 "avatar": avatar,
             }
 
-
-            package={"data":data,"info":info, "articles_list":articles_list}
+            package = {"data": data, "info": info, "articles_list": articles_list}
 
             return JsonResponse(package, safe=False)
         except User.DoesNotExist:
@@ -204,32 +207,31 @@ def get_profile(request, user_id):
 
 @csrf_exempt
 def editProfile(request, user_id):
-
     if request.method == "POST":
         user = User.objects.get(user_id=user_id)
         data = json.loads(request.body)
-        print(data)
-        result={}
+        ##print(data)
+        result = {}
         result["username"] = data.get("username")
         result["phone_number"] = data.get("phone_number")
         result["team"] = data.get("team")
-        result["avatar"]=data.get("avatar")
+        result["avatar"] = data.get("avatar")
 
-        if ((User.objects.filter(user_name=result["username"]).exists()) and ((result["username"]!=user.user_name))):
-                print("Username already exists.")
-                return JsonResponse({"error": "Username already exists."})
+        if ((User.objects.filter(user_name=result["username"]).exists()) and ((result["username"] != user.user_name))):
+            ##print("Username already exists.")
+            return JsonResponse({"error": "Username already exists."})
 
         # Create a new user instance and set the fields
-        user.user_name=result["username"]
-        user.team=result["team"]
-        user.phone_number=result["phone_number"]
-        user.avatar=result["avatar"]
+        user.user_name = result["username"]
+        user.team = result["team"]
+        user.phone_number = result["phone_number"]
+        user.avatar = result["avatar"]
         user.save()
 
         return JsonResponse({"user_id": user.user_id})
 
-
     return JsonResponse({"error": "Invalid request method."})
+
 
 @csrf_exempt
 def authenticate_session_token(request):
@@ -242,6 +244,8 @@ def authenticate_session_token(request):
 
 
 SESSION_EXPIRY = timedelta(hours=6)
+
+
 def is_session_valid(user_id):
     stored_session = UserSession.objects.filter(session_token=user_id).first()
     if stored_session is None:
@@ -271,10 +275,31 @@ def get_articles(request):
                     'link': article.link
                 }
                 articles_list.append(article_dict)
+
+
+
+            recommend_article = Article.objects.order_by('?').first()
+
+            recommend_info={
+                    'bias_index': recommend_article.bias_index,
+                    'head': recommend_article.head,
+
+                    'brief': recommend_article.brief,
+                    'img': recommend_article.img,
+                    'link': recommend_article.link
+                }
+
+            result_dic = {"article": articles_list,'recommend':recommend_info}
+
+
+
+
+
         except:
-            errormessgae="error_here:("
+            errormessgae = "error_here:("
         # Return the questions as a JSON response
-        return JsonResponse(articles_list, safe=False)
+
+        return JsonResponse(result_dic, safe=False)
 
 
 @csrf_exempt
