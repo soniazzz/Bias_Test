@@ -4,6 +4,7 @@ from bias_test.models import BiasTestQuestion, User, UserSession, Article
 from django.core.exceptions import ObjectDoesNotExist
 from django.utils import timezone
 from datetime import datetime, timedelta
+from random import shuffle
 import json
 
 
@@ -68,7 +69,7 @@ def get_questions(request):
                     questions_list.append(question_dict)
 
             # Shuffle the questions to randomize the order
-            from random import shuffle
+
             shuffle(questions_list)
         except:
             errormessgae = "error_here:("
@@ -259,46 +260,78 @@ def is_session_valid(user_id):
     return True
 
 
+
 def get_articles(request):
     if request.method == 'GET':
-        try:
-            # Retrieve 5 random articles from the database
-            articles = Article.objects.order_by('?')[:5]
-            # Convert the questions to a list of dictionaries
-            articles_list = []
-            for article in articles:
-                article_dict = {
-                    'bias_index': article.bias_index,
-                    'head': article.head,
-                    'brief': article.brief,
-                    'img': article.img,
-                    'link': article.link
-                }
-                articles_list.append(article_dict)
+        articles_list = []
+        for bias in range(1, 6):
+            try:
+                # Retrieve a random article with the current bias_index
+                article = Article.objects.filter(bias_index=bias).order_by('?').first()
+                if article:
+                    article_dict = {
+                        'bias_index': article.bias_index,
+                        'head': article.head,
+                        'brief': article.brief,
+                        'img': article.img,
+                        'link': article.link
+                    }
+                    articles_list.append(article_dict)
+                shuffle(articles_list)
+            except ObjectDoesNotExist:
+                pass
 
+        recommend_article = Article.objects.order_by('?').first()
+        if recommend_article:
+            recommend_info = {
+                'bias_index': recommend_article.bias_index,
+                'head': recommend_article.head,
+                'brief': recommend_article.brief,
+                'img': recommend_article.img,
+                'link': recommend_article.link
+            }
+        else:
+            recommend_info = None
 
+        result_dic = {"article": articles_list, 'recommend': recommend_info}
 
-            recommend_article = Article.objects.order_by('?').first()
-
-            recommend_info={
-                    'bias_index': recommend_article.bias_index,
-                    'head': recommend_article.head,
-
-                    'brief': recommend_article.brief,
-                    'img': recommend_article.img,
-                    'link': recommend_article.link
-                }
-
-            result_dic = {"article": articles_list,'recommend':recommend_info}
-
-
-
-
-
-        except:
-            errormessgae = "error_here:("
         # Return the questions as a JSON response
+        return JsonResponse(result_dic, safe=False)
 
+
+def get_articles_of_type(request, bias_index, page):
+    if request.method == 'GET':
+        articles_per_page = 6
+        start = (page - 1) * articles_per_page
+        end = page * articles_per_page
+
+        articles = Article.objects.filter(bias_index=bias_index)[start:end]
+        articles_list = []
+        for article in articles:
+            article_dict = {
+                'bias_index': article.bias_index,
+                'head': article.head,
+                'brief': article.brief,
+                'img': article.img,
+                'link': article.link
+            }
+            articles_list.append(article_dict)
+
+        recommend_article = Article.objects.filter(bias_index=bias_index).order_by('?').first()
+        if recommend_article:
+            recommend_info = {
+                'bias_index': recommend_article.bias_index,
+                'head': recommend_article.head,
+                'brief': recommend_article.brief,
+                'img': recommend_article.img,
+                'link': recommend_article.link
+            }
+        else:
+            recommend_info = None
+
+        total_articles = len(Article.objects.filter(bias_index=bias_index))
+
+        result_dic = {"article": articles_list, 'recommend': recommend_info, 'total': total_articles}
         return JsonResponse(result_dic, safe=False)
 
 
