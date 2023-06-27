@@ -1,6 +1,6 @@
 from django.http import JsonResponse, HttpResponseForbidden, HttpResponse
 from django.views.decorators.csrf import csrf_exempt
-from bias_test.models import BiasTestQuestion, User, UserSession, Article
+from bias_test.models import BiasTestQuestion, User, UserSession, Article, Post
 from django.core.exceptions import ObjectDoesNotExist
 from django.utils import timezone
 from datetime import datetime, timedelta
@@ -343,3 +343,24 @@ def logout(request):
 
         UserSession.objects.filter(session_token=user_id).delete()
         return JsonResponse({"status": "Logged out."})
+
+
+def get_posts_of_type(request, bias_index):
+    if request.method == 'GET':
+        print(bias_index)
+
+        posts = Post.objects.filter(bias_index=bias_index)
+        posts_list = []
+        for post in posts:
+            user= User.objects.filter(user_id=post.post_id)
+            post_dict = {
+                'title': post.post_title,
+                'poster':user.user_name,
+                'details': post.post_details,
+                'postDate': post.post_title,
+                'numberOfReplies': 10,
+                'posterAvatar': user.avatar
+            }
+            posts_list.append(post_dict)
+        result_dic = {"posts": posts_list}
+        return JsonResponse(result_dic, safe=False)

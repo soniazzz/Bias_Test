@@ -46,3 +46,15 @@ class Article(models.Model):
     brief= models.TextField()
     img= models.TextField()
     link= models.TextField()
+
+
+class Post(models.Model):
+    post_id = models.AutoField(primary_key=True)
+    bias_index=models.IntegerField()
+    poster_id=models.IntegerField()
+    post_title=models.TextField()
+    post_details = models.TextField()
+    post_time=models.DateTimeField()
+
+
+
