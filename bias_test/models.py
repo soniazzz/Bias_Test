@@ -54,7 +54,23 @@ class Post(models.Model):
     poster_id=models.IntegerField()
     post_title=models.TextField()
     post_details = models.TextField()
-    post_time=models.DateTimeField()
+    post_time=models.DateTimeField(auto_now_add=True)
+
+
+class Reply(models.Model):
+    reply_index = models.AutoField(primary_key=True)
+    post_id=models.IntegerField(default=0)
+    title = models.TextField()
+    poster_id=models.IntegerField()
+    post_date = models.DateTimeField(auto_now_add=True)
+    details = models.TextField()
+    parent_reply = models.ForeignKey('self', null=True, blank=True, on_delete=models.CASCADE, related_name='child_replies')
+
+    def __str__(self):
+        return self.title
+
+    def replies(self):
+        return Reply.objects.filter(parent_reply=self)
 
 
 

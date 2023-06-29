@@ -1,6 +1,6 @@
 from django.http import JsonResponse, HttpResponseForbidden, HttpResponse
 from django.views.decorators.csrf import csrf_exempt
-from bias_test.models import BiasTestQuestion, User, UserSession, Article, Post
+from bias_test.models import BiasTestQuestion, User, UserSession, Article, Post, Reply
 from django.core.exceptions import ObjectDoesNotExist
 from django.utils import timezone
 from datetime import datetime, timedelta
@@ -10,7 +10,7 @@ import json
 
 def calculate_result(result):
     for key in result:
-        result[key] = result[key] /4/10
+        result[key] = result[key] / 4 / 10
     return result
 
 
@@ -260,7 +260,6 @@ def is_session_valid(user_id):
     return True
 
 
-
 def get_articles(request):
     if request.method == 'GET':
         articles_list = []
@@ -349,18 +348,88 @@ def get_posts_of_type(request, bias_index):
     if request.method == 'GET':
         print(bias_index)
 
-        posts = Post.objects.filter(bias_index=bias_index)
+
+        if bias_index == 0:
+            posts = Post.objects.all()
+
+
+        elif bias_index == 6:
+            posts = Post.objects.order_by('?')[:4]
+
+        else:
+            posts = Post.objects.filter(bias_index=bias_index)
+
         posts_list = []
         for post in posts:
-            user= User.objects.filter(user_id=post.post_id)
+            user = User.objects.get(user_id=post.poster_id)
+            print(post.post_id)
+            replies = fetch_replies(post.post_id, None)
             post_dict = {
                 'title': post.post_title,
-                'poster':user.user_name,
+                'poster': user.user_name,
                 'details': post.post_details,
-                'postDate': post.post_title,
-                'numberOfReplies': 10,
-                'posterAvatar': user.avatar
+                'postDate': post.post_time,
+                'numberOfReplies': count_replies(replies),
+                'bias_index': post.bias_index,
+                'post_index': post.post_id
             }
             posts_list.append(post_dict)
+
         result_dic = {"posts": posts_list}
+        return JsonResponse(result_dic, safe=False)
+
+
+def count_replies(reply_list):
+    total_count = 0
+    for reply in reply_list:
+        total_count += 1  # Count the current reply
+        total_count += count_replies(reply['replies'])  # Count all sub-replies
+    print('num of replies:'+str(total_count))
+    return total_count
+
+
+# views.py
+def fetch_replies(post_index, parent_reply):
+    replies = Reply.objects.filter(post_id=post_index, parent_reply=parent_reply)
+    reply_list = []
+    for reply in replies:
+        print(reply)
+        user = User.objects.get(user_id=reply.poster_id)
+        reply_data = {
+            'id': reply.reply_index,
+            'title': reply.title,
+            'poster': user.user_name,
+            'avatar': user.avatar,
+            'postDate': reply.post_date,
+            'details': reply.details,
+            'replies': fetch_replies(post_index, reply)
+        }
+
+        reply_list.append(reply_data)
+
+
+    return reply_list
+
+
+def get_post(request, post_index):
+    if request.method == 'GET':
+        post = Post.objects.get(post_id=post_index)
+        user = User.objects.get(user_id=post.poster_id)
+
+        # Fetch replies
+        replies = fetch_replies(post_index, None)
+
+        post_dict = {
+            'title': post.post_title,
+            'poster': user.user_name,
+            'details': post.post_details,
+            'postDate': post.post_time,
+            'numberOfReplies': count_replies(replies),
+            'posterAvatar': user.avatar,
+            'bias_index': post.bias_index,
+            'post_index': post.post_id,
+        }
+
+        result_dic = {"post": post_dict, 'replies': replies}
+        print (result_dic['replies'])
         return JsonResponse(result_dic, safe=False)
