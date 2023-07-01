@@ -330,6 +330,8 @@ def get_articles_of_type(request, bias_index, page):
 
         total_articles = len(Article.objects.filter(bias_index=bias_index))
 
+
+
         result_dic = {"article": articles_list, 'recommend': recommend_info, 'total': total_articles}
         return JsonResponse(result_dic, safe=False)
 
@@ -433,3 +435,19 @@ def get_post(request, post_index):
         result_dic = {"post": post_dict, 'replies': replies}
         print (result_dic['replies'])
         return JsonResponse(result_dic, safe=False)
+
+
+@csrf_exempt
+def create_post(request):
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        post = Post(
+            bias_index=data['bias_index'],
+            poster_id=data['poster_id'],
+            post_title=data['post_title'],
+            post_details=data['post_details']
+        )
+        post.save()
+        return JsonResponse({'status': 'success', 'post_id': post.post_id})
+    else:
+        return JsonResponse({'status': 'error', 'message': 'Invalid request method'})

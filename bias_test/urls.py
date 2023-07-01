@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import submit_choice,get_questions, get_bias_results, signup, login, get_profile,editProfile, authenticate_session_token, get_articles, get_articles_of_type, logout, get_posts_of_type, get_post
+from .views import submit_choice,get_questions, get_bias_results, signup, login, get_profile,editProfile, authenticate_session_token, get_articles, get_articles_of_type, logout, get_posts_of_type, get_post, create_post
 urlpatterns = [
     path('api/submit-choice/', submit_choice, name='submit_choice'),
     path('api/get-questions/', get_questions, name='get_questions'),
@@ -13,5 +13,6 @@ urlpatterns = [
     path('api/get-articles_of_type/<int:bias_index>/<int:page>/', get_articles_of_type, name='get_articles_of_type'),
     path('api/logout/', logout, name='logout'),
     path('api/posts/<int:bias_index>/', get_posts_of_type, name='posts-of-type'),
-    path('api/one_post/<int:post_index>/', get_post, name='post')
+    path('api/one_post/<int:post_index>/', get_post, name='post'),
+    path('api/create_post/', create_post, name='create_post')
 ]
