@@ -19,7 +19,7 @@ def submit_choice(request):
     if request.method == 'POST':
         # get user responses
         data = parseJsonToDictionary(request.body)
-        print(data)
+        #print(data)
         responses = data.get('responses')
         user_id = data.get('user_id')
 
@@ -348,7 +348,7 @@ def logout(request):
 
 def get_posts_of_type(request, bias_index):
     if request.method == 'GET':
-        print(bias_index)
+        #print(bias_index)
 
 
         if bias_index == 0:
@@ -364,7 +364,7 @@ def get_posts_of_type(request, bias_index):
         posts_list = []
         for post in posts:
             user = User.objects.get(user_id=post.poster_id)
-            print(post.post_id)
+            #print(post.post_id)
             replies = fetch_replies(post.post_id, None)
             post_dict = {
                 'title': post.post_title,
@@ -386,7 +386,7 @@ def count_replies(reply_list):
     for reply in reply_list:
         total_count += 1  # Count the current reply
         total_count += count_replies(reply['replies'])  # Count all sub-replies
-    print('num of replies:'+str(total_count))
+    #print('num of replies:'+str(total_count))
     return total_count
 
 
@@ -395,7 +395,7 @@ def fetch_replies(post_index, parent_reply):
     replies = Reply.objects.filter(post_id=post_index, parent_reply=parent_reply)
     reply_list = []
     for reply in replies:
-        print(reply)
+        #print(reply)
         user = User.objects.get(user_id=reply.poster_id)
         reply_data = {
             'id': reply.reply_index,
@@ -404,7 +404,8 @@ def fetch_replies(post_index, parent_reply):
             'avatar': user.avatar,
             'postDate': reply.post_date,
             'details': reply.details,
-            'replies': fetch_replies(post_index, reply)
+            'replies': fetch_replies(post_index, reply),
+            'post_index': reply.post_id
         }
 
         reply_list.append(reply_data)
@@ -433,7 +434,7 @@ def get_post(request, post_index):
         }
 
         result_dic = {"post": post_dict, 'replies': replies}
-        print (result_dic['replies'])
+        #print (result_dic['replies'])
         return JsonResponse(result_dic, safe=False)
 
 
@@ -451,3 +452,42 @@ def create_post(request):
         return JsonResponse({'status': 'success', 'post_id': post.post_id})
     else:
         return JsonResponse({'status': 'error', 'message': 'Invalid request method'})
+
+
+
+from django.views.decorators.csrf import csrf_exempt
+from .models import Reply
+
+@csrf_exempt
+def create_reply(request):
+    if request.method == "POST":
+        data = json.loads(request.body)
+        post_id = data.get('post_id')
+        parent_reply = data.get('parent_reply')
+        poster_id = data.get('poster_id')
+        details = data.get('details')
+        post = Post.objects.get(post_id=post_id)
+
+        print('get a reply from front end')
+
+
+        if parent_reply==None:
+            title='Re: '+post.post_title
+        else:
+            parent = Reply.objects.get(reply_index=parent_reply)
+            title='Re: '+parent.title
+
+
+
+        reply = Reply(
+            title=title,
+            post_id=post_id,
+            parent_reply_id=parent_reply,
+            poster_id=poster_id,
+            details=details
+        )
+        reply.save()
+
+        return JsonResponse({"message": "success"}, status=201)
+    else:
+        return JsonResponse({"error": "Invalid request method"}, status=400)
