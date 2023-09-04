@@ -31,7 +31,7 @@ class User(models.Model):
     possibility_biases_3 = models.FloatField(default=0, null=True, blank=True)
     possibility_biases_4 = models.FloatField(default=0, null=True, blank=True)
     possibility_biases_5 = models.FloatField(default=0, null=True, blank=True)
-    avatar = models.TextField(default='https://th.bing.com/th/id/R.9406b6733452f77e2508e8c99d7706cc?rik=hiO5yYVXcHnVbg&riu=http%3a%2f%2fpic.2265.com%2fupload%2f2017-4%2f20174261525268918.png&ehk=eg4iXWUV3vwQGawiPmx0EyrIBNr9JtqBU%2bcu49moe0c%3d&risl=&pid=ImgRaw&r=0')
+    avatar = models.TextField(default='https://th.bing.com/th/id/R.945f33b643f2ceffcdae90fb57c61854?rik=ZbauAhRVa2agEw&riu=http%3a%2f%2fgetdrawings.com%2ffree-icon-bw%2fgeneric-avatar-icon-3.png&ehk=MEKRKETvvufVVLoShHum%2baEfkHOctyKClaf6qCu3Msg%3d&risl=&pid=ImgRaw&r=0')
 
     def update_possibility_biases(self, result_dict):
         for bias_index, possibility in result_dict.items():
